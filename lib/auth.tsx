@@ -1,7 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { createContext, ReactNode, startTransition, useContext, useEffect, useState } from 'react'
 import { mockOwner } from './data'
 import { Owner } from './types'
 
@@ -21,8 +20,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('wamio_owner')
-    if (saved) setOwner(JSON.parse(saved))
-    setIsLoading(false)
+
+    startTransition(() => {
+      setOwner(saved ? JSON.parse(saved) : null)
+      setIsLoading(false)
+    })
   }, [])
 
   const login = (email: string, password: string): boolean => {

@@ -10,15 +10,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !owner) {
-      router.push('/login')
-    }
+    if (!isLoading && !owner) router.push('/login')
   }, [owner, isLoading, router])
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+      <div
+        className="flex min-h-screen items-center justify-center bg-[var(--background)]"
+        suppressHydrationWarning
+      >
+        <div className="panel flex h-16 w-16 items-center justify-center">
+          <div className="h-3.5 w-3.5 rounded-full bg-[var(--accent-strong)] animate-pulse" />
+        </div>
       </div>
     )
   }
@@ -26,11 +29,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!owner) return null
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen bg-[var(--background)] md:flex" suppressHydrationWarning>
       <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <main className="min-w-0 flex-1 overflow-auto">{children}</main>
     </div>
   )
 }

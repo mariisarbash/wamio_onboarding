@@ -1,223 +1,333 @@
 'use client'
 
+import { ArrowLeft, ArrowRight, Bot, House, Sparkles } from 'lucide-react'
 import { use } from 'react'
 import Link from 'next/link'
-import { mockProperties, mockLeads } from '@/lib/data'
+import { mockLeads, mockProperties } from '@/lib/data'
 import { LeadStatus } from '@/lib/types'
 
-function statusConfig(s: LeadStatus) {
-  if (s === 'qualificato') return { text: 'Qualificato', cls: 'bg-black text-white' }
-  if (s === 'non_adatto') return { text: 'Non adatto', cls: 'bg-zinc-100 text-zinc-500' }
-  return { text: 'Da valutare', cls: 'bg-zinc-200 text-zinc-700' }
+function leadBadge(status: LeadStatus) {
+  if (status === 'qualificato') {
+    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
+  }
+  if (status === 'non_adatto') {
+    return 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200'
+  }
+  return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200'
 }
 
-function Row({ label, value }: { label: string; value: string | number | boolean }) {
-  const display = typeof value === 'boolean' ? (value ? 'Sì' : 'No') : value
+function DetailGroup({
+  title,
+  rows,
+}: {
+  title: string
+  rows: Array<[string, string | number]>
+}) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-zinc-50 last:border-b-0">
-      <span className="text-sm text-zinc-500">{label}</span>
-      <span className="text-sm font-medium">{display}</span>
-    </div>
+    <section className="panel p-6">
+      <p className="eyebrow mb-4">{title}</p>
+      <div className="space-y-3">
+        {rows.map(([label, value]) => (
+          <div
+            key={label}
+            className="flex items-center justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--card-soft)] px-4 py-3"
+          >
+            <span className="text-sm text-[var(--muted-foreground)]">{label}</span>
+            <span className="text-sm font-medium text-[var(--foreground)]">{value}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const property = mockProperties.find(p => p.id === id)
-  const propertyLeads = mockLeads.filter(l => l.propertyId === id)
+  const property = mockProperties.find(item => item.id === id)
+  const propertyLeads = mockLeads.filter(lead => lead.propertyId === id)
 
   if (!property) {
     return (
-      <div className="px-10 py-8">
-        <p className="text-sm text-zinc-500">Proprietà non trovata.</p>
-        <Link href="/dashboard" className="text-sm underline underline-offset-4 mt-2 inline-block">
-          Torna alla dashboard
-        </Link>
+      <div className="page-shell">
+        <div className="panel p-8">
+          <p className="text-base text-[var(--muted-foreground)]">Proprietà non trovata.</p>
+          <Link href="/dashboard" className="btn-secondary mt-6">
+            <ArrowLeft className="h-4 w-4" />
+            Torna alla dashboard
+          </Link>
+        </div>
       </div>
     )
   }
 
-  const listingTypeLabel: Record<string, string> = {
-    appartamento: 'Appartamento intero',
-    stanza: 'Stanza singola',
-    piu_stanze: 'Più stanze',
-  }
-  const rentalTypeLabel: Record<string, string> = {
-    breve: 'Affitto breve',
-    lungo: 'Affitto lungo',
-    entrambi: 'Breve + lungo',
-  }
-  const furnishedLabel: Record<string, string> = {
-    completamente: 'Completamente arredato',
-    parzialmente: 'Parzialmente arredato',
-    no: 'Non arredato',
+  const labelMap = {
+    listingType: {
+      appartamento: 'Appartamento intero',
+      stanza: 'Stanza singola',
+      piu_stanze: 'Più stanze',
+    } as Record<string, string>,
+    rentalType: {
+      breve: 'Affitto breve',
+      lungo: 'Affitto lungo',
+      entrambi: 'Breve + lungo',
+    } as Record<string, string>,
+    furnished: {
+      completamente: 'Completamente arredato',
+      parzialmente: 'Parzialmente arredato',
+      no: 'Non arredato',
+    } as Record<string, string>,
+    botTone: {
+      formale: 'Formale',
+      neutro: 'Neutro',
+      amichevole: 'Amichevole',
+      premium: 'Premium',
+    } as Record<string, string>,
   }
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Link href="/dashboard" className="text-xs text-zinc-400 hover:text-zinc-600">
-              ← Dashboard
-            </Link>
-          </div>
-          <h2 className="text-2xl font-semibold tracking-tight">{property.name}</h2>
-          <p className="text-sm text-zinc-500 mt-1">{property.address}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className={`text-xs px-2 py-1 ${property.botActive ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-500'}`}>
-            Bot {property.botActive ? 'attivo' : 'inattivo'}
-          </div>
-          <div className="text-xs text-zinc-500">
-            {property.completionPercent}% completo
-          </div>
-        </div>
-      </div>
+    <div className="page-shell">
+      <Link href="/dashboard" className="btn-ghost mb-4">
+        <ArrowLeft className="h-4 w-4" />
+        Dashboard
+      </Link>
 
-      {/* Completion bar */}
+      <section className="panel-strong overflow-hidden p-7 md:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="eyebrow mb-4">Scheda proprietà</p>
+            <h1 className="section-title">{property.name}</h1>
+            <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)] md:text-base">
+              {property.address}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <span
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                property.botActive
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
+                  : 'bg-stone-200 text-stone-600 dark:bg-white/6 dark:text-stone-300'
+              }`}
+            >
+              {property.botActive ? 'Bot attivo' : 'Bot non attivo'}
+            </span>
+            <span className="rounded-full border border-[var(--border)] bg-[var(--card-soft)] px-4 py-2 text-sm text-[var(--muted-strong)]">
+              Completezza {property.completionPercent}%
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-7 grid gap-4 sm:grid-cols-3">
+          {[
+            {
+              label: 'Zona',
+              value: property.zone,
+              icon: House,
+            },
+            {
+              label: 'Canone',
+              value: `${property.price.toLocaleString('it-IT')}€/mese`,
+              icon: Sparkles,
+            },
+            {
+              label: 'Bot tone',
+              value: labelMap.botTone[property.botTone],
+              icon: Bot,
+            },
+          ].map(item => (
+            <div key={item.label} className="rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="label-uc block">{item.label}</p>
+                <item.icon className="h-4 w-4 text-[var(--muted-foreground)]" />
+              </div>
+              <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--foreground)]">
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {property.completionPercent < 100 && (
-        <div className="mb-8 p-4 border border-zinc-200 bg-zinc-50">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium">Profilo incompleto</p>
-            <p className="text-xs text-zinc-400">{property.completionPercent}/100</p>
-          </div>
-          <div className="w-full h-1 bg-zinc-200">
-            <div className="h-1 bg-black" style={{ width: `${property.completionPercent}%` }} />
-          </div>
-          <p className="text-xs text-zinc-500 mt-2">
-            Completa il profilo per migliorare le risposte del bot e attirare più lead qualificati.
-          </p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-10">
-        {/* Left column */}
-        <div className="space-y-8">
-          <section>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-3">
-              Tipo e disponibilità
-            </h3>
-            <div className="border border-zinc-100 px-4 divide-y divide-zinc-50">
-              <Row label="Tipo annuncio" value={listingTypeLabel[property.listingType]} />
-              <Row label="Tipo affitto" value={rentalTypeLabel[property.rentalType]} />
-              <Row label="Disponibile dal" value={property.availableFrom} />
-              <Row label="Visite possibili" value={property.visitsAllowed} />
+        <section className="mt-6 panel p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="eyebrow mb-3">Setup incompleto</p>
+              <p className="text-sm leading-7 text-[var(--muted-strong)]">
+                Completa il profilo per migliorare le risposte del bot e rendere
+                l’attivazione più lineare.
+              </p>
             </div>
-          </section>
-
-          <section>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-3">
-              Proprietà
-            </h3>
-            <div className="border border-zinc-100 px-4 divide-y divide-zinc-50">
-              <Row label="Zona" value={property.zone} />
-              <Row label="Piano" value={property.floor} />
-              <Row label="Ascensore" value={property.elevator} />
-              <Row label="Superficie" value={`${property.sqm} m²`} />
-              <Row label="Stanze" value={property.rooms} />
-              <Row label="Bagni" value={property.bathrooms} />
-              <Row label="Ospiti max" value={property.maxGuests} />
-              <Row label="Arredamento" value={furnishedLabel[property.furnished]} />
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-3">
-              Regole
-            </h3>
-            <div className="border border-zinc-100 px-4 divide-y divide-zinc-50">
-              <Row label="Fumo" value={property.smokingAllowed === 'si' ? 'Sì' : property.smokingAllowed === 'balcone' ? 'Solo balcone' : 'No'} />
-              <Row label="Animali" value={property.petsAllowed === 'si' ? 'Sì' : property.petsAllowed === 'dipende' ? 'Dipende' : 'No'} />
-            </div>
-          </section>
-        </div>
-
-        {/* Right column */}
-        <div className="space-y-8">
-          <section>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-3">
-              Prezzo
-            </h3>
-            <div className="border border-zinc-100 px-4 divide-y divide-zinc-50">
-              <Row label="Canone mensile" value={`${property.price.toLocaleString('it-IT')}€`} />
-              <Row label="Deposito" value={`${property.deposit.toLocaleString('it-IT')}€`} />
-              <Row label="Prezzo" value={property.priceNegotiable === 'fisso' ? 'Fisso' : property.priceNegotiable === 'trattabile' ? 'Trattabile' : 'Parzialmente trattabile'} />
-              <div className="py-2.5">
-                <span className="text-sm text-zinc-500">Spese incluse</span>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {property.expensesIncluded.length > 0
-                    ? property.expensesIncluded.map(e => (
-                        <span key={e} className="text-xs bg-zinc-100 px-2 py-0.5">{e}</span>
-                      ))
-                    : <span className="text-xs text-zinc-400">Nessuna</span>
-                  }
-                </div>
+            <div className="min-w-[220px]">
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="text-[var(--muted-foreground)]">Progresso</span>
+                <span className="font-medium text-[var(--foreground)]">
+                  {property.completionPercent}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-[var(--muted)]">
+                <div
+                  className="h-2 rounded-full bg-[linear-gradient(90deg,var(--accent-strong),var(--accent-secondary))]"
+                  style={{ width: `${property.completionPercent}%` }}
+                />
               </div>
             </div>
-          </section>
+          </div>
+        </section>
+      )}
 
-          <section>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-3">
-              Impostazioni bot
-            </h3>
-            <div className="border border-zinc-100 px-4 divide-y divide-zinc-50">
-              <Row label="Stato" value={property.botActive ? 'Attivo' : 'Inattivo'} />
-              <Row label="Tono" value={{ formale: 'Formale', neutro: 'Neutro', amichevole: 'Amichevole', premium: 'Premium' }[property.botTone]} />
-              <Row label="Condivide foto" value={property.canSharePhotos} />
-              <Row label="Foto caricate" value={`${property.photos} foto`} />
-              <Row label="Escalation a" value={property.escalationContact || '—'} />
-            </div>
-          </section>
+      <section className="mt-6 grid gap-6 xl:grid-cols-2">
+        <DetailGroup
+          title="Tipo e disponibilità"
+          rows={[
+            ['Tipo annuncio', labelMap.listingType[property.listingType]],
+            ['Tipo affitto', labelMap.rentalType[property.rentalType]],
+            ['Disponibile dal', property.availableFrom],
+            ['Visite possibili', property.visitsAllowed ? 'Sì' : 'No'],
+          ]}
+        />
 
-          {!property.botActive && (
-            <div className="p-4 border border-zinc-200">
-              <p className="text-sm font-medium mb-1">Bot non attivo</p>
-              <p className="text-xs text-zinc-500 mb-3">
-                {property.completionPercent < 80
-                  ? 'Completa i campi obbligatori per attivare il bot.'
-                  : 'Il bot è pronto. Attivalo per iniziare a ricevere lead.'}
-              </p>
-              <button className="text-xs bg-black text-white px-3 py-1.5 hover:bg-zinc-800 transition-colors">
-                {property.completionPercent < 80 ? 'Completa profilo' : 'Attiva bot'}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+        <DetailGroup
+          title="Proprietà"
+          rows={[
+            ['Piano', property.floor],
+            ['Ascensore', property.elevator],
+            ['Superficie', `${property.sqm} m²`],
+            ['Stanze', property.rooms],
+            ['Bagni', property.bathrooms],
+            ['Ospiti max', property.maxGuests],
+            ['Arredamento', labelMap.furnished[property.furnished]],
+          ]}
+        />
 
-      {/* Leads */}
+        <DetailGroup
+          title="Prezzo e regole"
+          rows={[
+            ['Canone mensile', `${property.price.toLocaleString('it-IT')}€`],
+            ['Deposito', `${property.deposit.toLocaleString('it-IT')}€`],
+            [
+              'Prezzo',
+              property.priceNegotiable === 'fisso'
+                ? 'Fisso'
+                : property.priceNegotiable === 'trattabile'
+                  ? 'Trattabile'
+                  : 'Parzialmente trattabile',
+            ],
+            [
+              'Fumo',
+              property.smokingAllowed === 'si'
+                ? 'Sì'
+                : property.smokingAllowed === 'balcone'
+                  ? 'Solo balcone'
+                  : 'No',
+            ],
+            [
+              'Animali',
+              property.petsAllowed === 'si'
+                ? 'Sì'
+                : property.petsAllowed === 'dipende'
+                  ? 'Dipende'
+                  : 'No',
+            ],
+          ]}
+        />
+
+        <section className="panel p-6">
+          <p className="eyebrow mb-4">Bot e contenuti</p>
+          <div className="space-y-3">
+            {[
+              ['Stato', property.botActive ? 'Attivo' : 'Inattivo'],
+              ['Tono', labelMap.botTone[property.botTone]],
+              ['Condivide foto', property.canSharePhotos],
+              ['Foto caricate', `${property.photos} foto`],
+              ['Escalation', property.escalationContact || '—'],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="flex items-center justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--card-soft)] px-4 py-3"
+              >
+                <span className="text-sm text-[var(--muted-foreground)]">{label}</span>
+                <span className="text-sm font-medium text-[var(--foreground)]">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-[22px] border border-[var(--border)] bg-[var(--primary)] p-5 text-[var(--primary-foreground)]">
+            <p className="text-sm leading-7 text-[var(--primary-foreground)]/82">
+              {property.botActive
+                ? 'Il bot sta già gestendo le conversazioni per questa proprietà.'
+                : property.completionPercent < 80
+                  ? 'Completa i campi obbligatori prima di attivare il bot.'
+                  : 'La scheda è pronta per essere attivata.'}
+            </p>
+            <button type="button" className="btn-secondary mt-5 border-white/12 bg-white/10 text-[var(--primary-foreground)] hover:bg-white/16">
+              {property.botActive ? 'Rivedi impostazioni' : 'Attiva bot'}
+            </button>
+          </div>
+        </section>
+      </section>
+
+      {property.expensesIncluded.length > 0 && (
+        <section className="mt-6 panel p-6">
+          <p className="eyebrow mb-4">Spese incluse</p>
+          <div className="flex flex-wrap gap-2">
+            {property.expensesIncluded.map(expense => (
+              <span
+                key={expense}
+                className="rounded-full border border-[var(--border)] bg-[var(--card-soft)] px-4 py-2 text-sm text-[var(--muted-strong)]"
+              >
+                {expense}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
       {propertyLeads.length > 0 && (
-        <section className="mt-10">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-              Lead per questa proprietà ({propertyLeads.length})
-            </h3>
-            <Link href="/leads" className="text-xs underline underline-offset-4 text-zinc-600 hover:text-zinc-900">
-              Vedi tutti i lead
+        <section className="mt-6 panel p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="eyebrow mb-3">Lead collegate</p>
+              <h2 className="text-[1.3rem] font-semibold tracking-[-0.04em] text-[var(--foreground)]">
+                {propertyLeads.length} conversazioni per questa proprietà
+              </h2>
+            </div>
+            <Link href="/leads" className="btn-secondary">
+              Vedi tutte
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="border border-zinc-100">
-            {propertyLeads.map((lead, i) => {
-              const s = statusConfig(lead.status)
-              return (
-                <div key={lead.id} className={`flex items-center justify-between px-5 py-3.5 ${i > 0 ? 'border-t border-zinc-100' : ''}`}>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {propertyLeads.map(lead => (
+              <div
+                key={lead.id}
+                className="rounded-[24px] border border-[var(--border)] bg-[var(--card-soft)] p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium">{lead.name}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">{lead.profile} · {lead.duration} · {lead.budget || 'budget n.d.'}</p>
+                    <p className="text-base font-semibold text-[var(--foreground)]">
+                      {lead.name}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+                      {lead.profile} · {lead.duration} · {lead.budget || 'Budget n.d.'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {lead.visitRequested && (
-                      <span className="text-xs text-zinc-400">Visita: {lead.visitDays}</span>
-                    )}
-                    <span className={`text-xs px-2 py-0.5 font-medium ${s.cls}`}>
-                      {s.text}
-                    </span>
-                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-[0.72rem] font-medium uppercase tracking-[0.12em] ${leadBadge(
+                      lead.status,
+                    )}`}
+                  >
+                    {lead.status.replace('_', ' ')}
+                  </span>
                 </div>
-              )
-            })}
+                {lead.visitRequested && (
+                  <p className="mt-4 text-sm text-[var(--muted-strong)]">
+                    Visita: {lead.visitDays}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       )}

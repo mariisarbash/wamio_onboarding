@@ -1,14 +1,19 @@
 'use client'
 
+import { ArrowRight, Bot, CalendarClock, Home, MessageSquareText, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
-import { mockProperties, mockLeads } from '@/lib/data'
+import { mockLeads, mockProperties } from '@/lib/data'
 import { LeadStatus } from '@/lib/types'
 
-function statusLabel(s: LeadStatus) {
-  if (s === 'qualificato') return { text: 'Qualificato', cls: 'bg-black text-white' }
-  if (s === 'non_adatto') return { text: 'Non adatto', cls: 'bg-zinc-100 text-zinc-500' }
-  return { text: 'Da valutare', cls: 'bg-zinc-200 text-zinc-700' }
+function leadBadge(status: LeadStatus) {
+  if (status === 'qualificato') {
+    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
+  }
+  if (status === 'non_adatto') {
+    return 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200'
+  }
+  return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200'
 }
 
 export default function DashboardPage() {
@@ -16,132 +21,178 @@ export default function DashboardPage() {
   const properties = mockProperties
   const leads = mockLeads
 
-  const activeBots = properties.filter(p => p.botActive).length
-  const qualifiedLeads = leads.filter(l => l.status === 'qualificato').length
-  const pendingVisits = leads.filter(l => l.visitRequested).length
-  const incompleteProps = properties.filter(p => p.completionPercent < 80).length
+  const activeBots = properties.filter(property => property.botActive).length
+  const qualifiedLeads = leads.filter(lead => lead.status === 'qualificato').length
+  const pendingVisits = leads.filter(lead => lead.visitRequested).length
+
+  const stats = [
+    {
+      label: 'Proprietà attive',
+      value: properties.length,
+      note: 'Portfolio monitorato',
+      icon: Home,
+    },
+    {
+      label: 'Bot operativi',
+      value: `${activeBots}/${properties.length}`,
+      note: 'Conversazioni già in corsa',
+      icon: Bot,
+    },
+    {
+      label: 'Lead qualificate',
+      value: qualifiedLeads,
+      note: 'Pronte per follow-up',
+      icon: Sparkles,
+    },
+    {
+      label: 'Visite da confermare',
+      value: pendingVisits,
+      note: 'Richieste ad alta priorità',
+      icon: CalendarClock,
+    },
+  ]
 
   return (
-    <div className="px-10 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Ciao, {owner?.nickname || owner?.name}
-        </h2>
-        <p className="text-sm text-zinc-500 mt-1">
-          Ecco cosa sta succedendo oggi
-        </p>
-      </div>
+    <div className="page-shell">
+      <section className="panel-strong overflow-hidden p-7 md:p-8">
+          <p className="eyebrow mb-5">Panoramica di oggi</p>
+          <h1 className="section-title max-w-[12ch]">
+            Ciao, {owner?.nickname || owner?.name}. Tutto molto più chiaro.
+          </h1>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-px bg-zinc-200 border border-zinc-200 mb-10">
-        {[
-          { label: 'Proprietà', value: properties.length },
-          { label: 'Bot attivi', value: `${activeBots}/${properties.length}` },
-          { label: 'Lead qualificati', value: qualifiedLeads },
-          { label: 'Visite richieste', value: pendingVisits },
-        ].map(stat => (
-          <div key={stat.label} className="bg-white px-6 py-5">
-            <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
-            <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider">{stat.label}</p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link href="/properties/new" className="btn-primary">
+              Aggiungi proprietà
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/leads" className="btn-secondary">
+              Apri lead
+            </Link>
+          </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map(stat => (
+          <div key={stat.label} className="panel p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="label-uc mb-4 block">{stat.label}</p>
+                <p className="metric-value text-[var(--foreground)]">{stat.value}</p>
+              </div>
+              <span className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[rgba(167,215,180,0.18)] text-[var(--accent-foreground)]">
+                <stat.icon className="h-5 w-5" />
+              </span>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-[var(--muted-foreground)]">
+              {stat.note}
+            </p>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Properties */}
-      <section className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium uppercase tracking-wider text-zinc-400">
-            Proprietà
-          </h3>
-          <Link
-            href="/properties/new"
-            className="text-xs text-zinc-900 underline underline-offset-4 hover:text-zinc-600"
-          >
-            Aggiungi nuova
-          </Link>
-        </div>
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
+        <div className="panel p-6 md:p-7">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow mb-3">Proprietà</p>
+              <h2 className="text-[1.55rem] font-semibold tracking-[-0.05em] text-[var(--foreground)]">
+                Portfolio in evidenza
+              </h2>
+            </div>
+            <Link href="/properties/new" className="text-sm font-medium text-[var(--muted-strong)] hover:text-[var(--foreground)]">
+              Nuova scheda
+            </Link>
+          </div>
 
-        <div className="border border-zinc-100">
-          {properties.map((p, i) => (
-            <Link
-              key={p.id}
-              href={`/properties/${p.id}`}
-              className={`flex items-center justify-between px-5 py-4 hover:bg-zinc-50 transition-colors ${i > 0 ? 'border-t border-zinc-100' : ''}`}
-            >
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="text-sm font-medium">{p.name}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5">{p.zone} · {p.price.toLocaleString('it-IT')}€/mese</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {properties.map(property => (
+              <Link
+                key={property.id}
+                href={`/properties/${property.id}`}
+                className="rounded-[26px] border border-[var(--border)] bg-[var(--card-strong)] p-5 shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:border-[var(--border-strong)]"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--foreground)]">
+                      {property.name}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+                      {property.zone} · {property.price.toLocaleString('it-IT')}€/mese
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      property.botActive
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
+                        : 'bg-stone-200 text-stone-600 dark:bg-white/6 dark:text-stone-300'
+                    }`}
+                  >
+                    {property.botActive ? 'Bot attivo' : 'In setup'}
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-center gap-6">
-                {/* Completion */}
-                <div className="text-right">
-                  <p className="text-xs text-zinc-400">{p.completionPercent}% completo</p>
-                  <div className="w-24 h-0.5 bg-zinc-100 mt-1">
+
+                <div className="mt-5 rounded-[20px] bg-[var(--card-soft)] p-4">
+                  <div className="mb-3 flex items-center justify-between text-sm">
+                    <span className="text-[var(--muted-strong)]">Completezza</span>
+                    <span className="font-medium text-[var(--foreground)]">
+                      {property.completionPercent}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[var(--muted)]">
                     <div
-                      className="h-0.5 bg-black transition-all"
-                      style={{ width: `${p.completionPercent}%` }}
+                      className="h-2 rounded-full bg-[linear-gradient(90deg,var(--accent-strong),var(--accent-secondary))]"
+                      style={{ width: `${property.completionPercent}%` }}
                     />
                   </div>
                 </div>
-                {/* Bot status */}
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${p.botActive ? 'bg-black' : 'bg-zinc-300'}`} />
-                  <span className="text-xs text-zinc-500">{p.botActive ? 'Attivo' : 'Inattivo'}</span>
-                </div>
-                <span className="text-zinc-300">›</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-6">
+          <div className="panel p-6">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div>
+                <p className="eyebrow mb-3">Lead recenti</p>
+                <h2 className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[var(--foreground)]">
+                  Le conversazioni da toccare oggi
+                </h2>
               </div>
-            </Link>
-          ))}
-        </div>
+              <MessageSquareText className="h-5 w-5 text-[var(--muted-foreground)]" />
+            </div>
 
-        {incompleteProps > 0 && (
-          <p className="mt-3 text-xs text-zinc-400">
-            {incompleteProps} {incompleteProps === 1 ? 'proprietà ha' : 'proprietà hanno'} un profilo incompleto. <Link href="/properties/1" className="underline underline-offset-2 text-zinc-600">Completa ora</Link>
-          </p>
-        )}
-      </section>
-
-      {/* Recent Leads */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium uppercase tracking-wider text-zinc-400">
-            Lead recenti
-          </h3>
-          <Link
-            href="/leads"
-            className="text-xs text-zinc-900 underline underline-offset-4 hover:text-zinc-600"
-          >
-            Vedi tutti
-          </Link>
-        </div>
-
-        <div className="border border-zinc-100">
-          {leads.slice(0, 4).map((lead, i) => {
-            const s = statusLabel(lead.status)
-            return (
-              <div
-                key={lead.id}
-                className={`flex items-center justify-between px-5 py-3.5 ${i > 0 ? 'border-t border-zinc-100' : ''}`}
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{lead.name}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5 truncate">
-                      {lead.propertyName} · {lead.profile}
-                    </p>
+            <div className="space-y-3">
+              {leads.slice(0, 4).map(lead => (
+                <div
+                  key={lead.id}
+                  className="rounded-[22px] border border-[var(--border)] bg-[var(--card-soft)] px-4 py-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--foreground)]">
+                        {lead.name}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-[var(--muted-foreground)]">
+                        {lead.propertyName} · {lead.profile}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-[0.72rem] font-medium uppercase tracking-[0.12em] ${leadBadge(
+                        lead.status,
+                      )}`}
+                    >
+                      {lead.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-4 text-xs text-[var(--muted-foreground)]">
+                    <span>{lead.firstContact}</span>
+                    {lead.visitRequested && <span>Visita richiesta</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className={`text-xs px-2 py-0.5 font-medium ${s.cls}`}>
-                    {s.text}
-                  </span>
-                  <span className="text-xs text-zinc-400">{lead.firstContact}</span>
-                </div>
-              </div>
-            )
-          })}
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>
