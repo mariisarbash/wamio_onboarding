@@ -21,7 +21,7 @@ function DetailGroup({
   rows,
 }: {
   title: string
-  rows: Array<[string, string | number]>
+  rows: Array<[string, string | number | boolean]>
 }) {
   return (
     <section className="panel p-6">
@@ -191,7 +191,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           title="Proprietà"
           rows={[
             ['Piano', property.floor],
-            ['Ascensore', property.elevator],
+            ['Ascensore', property.elevator ? 'Sì' : 'No'],
             ['Superficie', `${property.sqm} m²`],
             ['Stanze', property.rooms],
             ['Bagni', property.bathrooms],
@@ -238,7 +238,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             {[
               ['Stato', property.botActive ? 'Attivo' : 'Inattivo'],
               ['Tono', labelMap.botTone[property.botTone]],
-              ['Condivide foto', property.canSharePhotos],
+              ['Condivide foto', property.canSharePhotos ? 'Sì' : 'No'],
               ['Foto caricate', `${property.photos} foto`],
               ['Escalation', property.escalationContact || '—'],
             ].map(([label, value]) => (
