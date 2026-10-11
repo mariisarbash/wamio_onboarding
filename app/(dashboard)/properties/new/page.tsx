@@ -539,7 +539,7 @@ export default function NewPropertyPage() {
             </div>
 
             <Field label="Contatto per escalation (WhatsApp o email)" hint="Il bot rimanda qui per lead qualificati o quando non sa rispondere">
-              <input className="input-base" value={form.escalationContact} onChange={e => set('escalationContact', e.target.value)} placeholder="+39 333 000 1111 o nome@email.it" />
+              <input className="input-base" value={form.escalationContact} onChange={e => set('escalationContact', e.target.value)} placeholder="+39 000 000 0000 o nome@example.com" />
             </Field>
           </>
         )}
